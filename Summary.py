@@ -32,7 +32,7 @@ class Summary():
     def getSentTokens(self, sent):
         if self.lang == "ar":
             stopWords = get_stop_words('arabic') 
-            add = ['أن', 'أو', 'عوض', 'فليس', 'ليس']
+            add = ['أن', 'أو', 'عوض', 'فليس', 'ليس', 'حين']
             stopWords.extend(add)
             tokens = nltk.word_tokenize(sent)
             cleanedTokens = []
@@ -40,7 +40,7 @@ class Summary():
                 if token not in stopWords:
                     word = ''.join(c for c in token if c not in punctuation)
                     if word != '':
-                        cleanedTokens.append(word)
+                        cleanedTokens.append(self.wordToStemme(word))
         return cleanedTokens
 
     ## Word normalization (stemming)
@@ -94,6 +94,7 @@ class Summary():
         from operator import itemgetter
         sortedFreqDist = sorted(freqDist.items(), key=itemgetter(1), reverse=True)
         sortedFreqDistList = [token[0] for token in sortedFreqDist]
+        print(sortedFreqDistList)
         return sortedFreqDistList[:10]
 
 
@@ -223,6 +224,7 @@ class Summary():
         sents = self.getArticleSents()
         sent, centroid = sents[idSent-1], sents[idCentroid-1]
         tfSent, tfCentroid = self.getTF(sent[1]), self.getTF(centroid[1])
+        print(tfCentroid.items())
         common = set(tfCentroid).intersection(tfSent)
         numerateur = 0
         for word in common:
@@ -236,13 +238,13 @@ class Summary():
 
     def centroidSimFeat(self):
         sents, idCentroid, dic = self.getArticleSents(), self.getCentroid(), {}
-        for sent in sents:
+        for sent in sents[:1]:
             dic[sents.index(sent)+1] = self.cosSim(idCentroid, sent[0])
         return dic
 
 
 
 if __name__ == "__main__":
-    article = "article.txt"
+    article = "article2.txt"
     summary = Summary(article, "ar")
-    print(summary.centroidSimFeat())
+    print(summary.thematicWords())
