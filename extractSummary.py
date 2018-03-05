@@ -6,7 +6,6 @@ from stop_words import get_stop_words
 
 punctuation += '،؟'
 
-
 class Summary():
     def __init__(self, article = False, lang = "en"):
         self.article = article
@@ -36,7 +35,7 @@ class Summary():
                     cleanedTokens.append(''.join(c for c in token if c not in punctuation))
         return cleanedTokens
 
-    ## Word normalization
+    ## Word normalization (stemming)
     def wordToStemme(self, word):
         if self.lang == "ar":
             from nltk.stem.isri import ISRIStemmer
@@ -44,6 +43,7 @@ class Summary():
             stemme = st.stem(word)
         return stemme
 
+    ## PoS Tagging
     def getPoSTaggetText(self, text):
         from nltk.tag import StanfordPOSTagger
         if self.lang == "ar":
@@ -53,6 +53,24 @@ class Summary():
             tokenizedText = nltk.word_tokenize(text.lower())
             taggedText = pos_tagger.tag(tokenizedText)
         return taggedText
+
+    ## Build a pre-processed article
+    def mainPreprocess(self):
+        paragraphs = self.getParagraphs()
+        dic = {}
+        for pg in paragraphs:
+            sents = {}
+            sentences = self.getParagraghSent(pg)
+            for sent in sentences:
+                sents[sentences.index(sent)] = sent
+            dic[paragraphs.index(pg)] = sents
+        print(dic)
+        # sents = self.getParagraghSent(paragraphs[0])
+        # words = self.getSentTokens(sents[7])
+        # posTaggedText = self.getPoSTaggetText(paragraphs[0])
+        # print(posTaggedText)
+
+
 
     ##~~~~~~ Features ~~~~~~##
 
@@ -111,8 +129,4 @@ class Summary():
 if __name__ == "__main__":
     article = "article.txt"
     summary = Summary(article, "ar")
-    paragraphs = summary.getParagraphs()
-    sents = summary.getParagraghSent(paragraphs[0])
-    words = summary.getSentTokens(sents[7])
-    posTaggedText = summary.getPoSTaggetText(paragraphs[0])
-    print(posTaggedText)
+    main = summary.mainPreprocess()
