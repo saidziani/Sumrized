@@ -210,69 +210,39 @@ class Summary():
 
     # Feature 9: Sentence to Centroid similarity
         # Sentence Similarity = cosine sim(sentence, centroid)
-        # i.e: centroid is the sentence with the highest tf_isf
+    # i.e: centroid is the sentence with the highest tf_isf
+    def getCentroid(self):
+        tf_isf = self.tf_isfFeat()
+        from operator import itemgetter
+        sortedTFISF = sorted(tf_isf.items(), key=itemgetter(1), reverse=True)
+        centroid = sortedTFISF[0][0]
+        return centroid
+
+    # Cos similarity between two sentences
+    def cosSim(self, idCentroid, idSent):
+        sents = self.getArticleSents()
+        sent, centroid = sents[idSent-1], sents[idCentroid-1]
+        tfSent, tfCentroid = self.getTF(sent[1]), self.getTF(centroid[1])
+        common = set(tfCentroid).intersection(tfSent)
+        numerateur = 0
+        for word in common:
+            numerateur += tfCentroid[word] * tfSent[word]
+        powTfCentroid = [pow(val, 2) for val in tfCentroid.values()]
+        powTfSent = [pow(val, 2) for val in tfSent.values()]
+        centroidSum, sentSum = sum(powTfCentroid), sum(powTfSent)
+        denumerateur = math.sqrt(centroidSum * sentSum)
+        cos_sim = round(numerateur / denumerateur, 4)
+        return cos_sim
+
+    def centroidSimFeat(self):
+        sents, idCentroid, dic = self.getArticleSents(), self.getCentroid(), {}
+        for sent in sents:
+            dic[sents.index(sent)+1] = self.cosSim(idCentroid, sent[0])
+        return dic
+
+
 
 if __name__ == "__main__":
     article = "article.txt"
     summary = Summary(article, "ar")
-    print(summary.tf_isfFeat())
-
-
-
-
-
-
-
-    # ##~~~~~~ Old Features ~~~~~~##
-
-    # ## Return the similarity between two sentences
-    # def sentSimilarity(self, method, sentA, sentB):
-    #     # method: 
-    #         # 1 => by set of words, word appear just one time
-    #         # 2 => all tokens with repitition 
-    #     sentA, sentB = sentA.split(), sentB.split()
-    #     if method == 1:
-    #         return len(set(sentA).intersection(set(sentB)))
-    #     else:
-    #         cpt = 0
-    #         for word in sentA:
-    #             if word in sentB:
-    #                 cpt += 1
-    #         return cpt
-
-    # ## Check if two sentences are connected (min: one element)
-    # def sentsConnected(self, sentA, sentB):
-    #     return True if self.sentSimilarity(1, sentA, sentB) > 0 else False
-
-
-    # #~~~~~~~~~~~~~~~~~~~~~~#    
-    # # Summarization Features
-
-    # ## Nb of Similarity with the first sentence:
-    # def fstSentFeat(self, method, sent, firstSent):
-    #     sent, firstSent = sent.split(), firstSent.split()
-    #     return self.sentSimilarity(method, sent, firstSent)
-
-
-    # ## Length of the sentence:
-    # def lenSentFeat(self, sent):
-    #     maxLen = 100
-    #     return len(sent) / maxLen
-
-
-    # ## Check if last or first sentence:
-    #     # method: 1 => first, 0 => last 
-    # def posSentFeat(self, method, sent):
-    #     splitedArticle2Sent = self.article.split()
-    #     articleLastSent = splitedArticle2Sent[len(splitedArticle2Sent)]
-    #     articleFstSent = splitedArticle2Sent[len(splitedArticle2Sent)]
-    #     if method == 1:
-    #         return True if sent == articleFstSent else False
-    #     else:
-    #         return True if sent == articleLastSent else False
-
-
-    # ## Similiraty with title (if possible):
-    # def titlesSimFeat(self, sent, title):
-    #     return self.sentSimilarity(2, sent, title)  
-
+    print(summary.centroidSimFeat())
