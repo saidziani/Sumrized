@@ -32,7 +32,7 @@ class Summary():
     def getSentTokens(self, sent):
         if self.lang == "ar":
             stopWords = get_stop_words('arabic') 
-            add = ['أن', 'أو', 'عوض', 'فليس', 'ليس', 'حين']
+            add = ['أن', 'أو', 'عوض', 'فليس', 'ليس', 'حين', 'مع']
             stopWords.extend(add)
             tokens = nltk.word_tokenize(sent)
             cleanedTokens = []
@@ -52,7 +52,7 @@ class Summary():
         return stemme
 
     ## PoS Tagging
-    def getPoSTaggetText(self, text):
+    def getPoSTaggedText(self, text):
         from nltk.tag import StanfordPOSTagger
         if self.lang == "ar":
             jar = 'stanford-pos-tagger/stanford-postagger-3.8.0.jar'
@@ -61,6 +61,7 @@ class Summary():
             tokenizedText = nltk.word_tokenize(text.lower())
             taggedText = pos_tagger.tag(tokenizedText)
         return taggedText
+
 
     ## Build a pre-processed article (with Paragraphs)
     def getPrepArticle(self):
@@ -94,7 +95,6 @@ class Summary():
         from operator import itemgetter
         sortedFreqDist = sorted(freqDist.items(), key=itemgetter(1), reverse=True)
         sortedFreqDistList = [token[0] for token in sortedFreqDist]
-        print(sortedFreqDistList)
         return sortedFreqDistList[:10]
 
 
@@ -122,7 +122,6 @@ class Summary():
     def sentPosFeat(self):
         sents = self.getArticleSents()
         totalNbSents = len(sents)
-        print(totalNbSents)
         dic = {}
         for sent in sents:
             if sent[0] in [ 1, totalNbSents ]:
@@ -130,7 +129,7 @@ class Summary():
             else:
                 min, max = 0.2*totalNbSents, 0.2*2*totalNbSents
                 ratio = math.cos((sent[0] - min) * ((1/max) - min))
-            dic[sent[0]] = ratio
+            dic[sent[0]] = round(ratio, 4)
         return dic
 
     # Feature 3: Sentence length 
@@ -156,6 +155,32 @@ class Summary():
         return dic
 
     # Feature 5: Number of proper nouns
+    def getPoSTaggedSents(self):
+        sents = self.getArticleSents()
+        dic = {}
+        for sent in sents:
+            posTaggedSent = self.getPoSTaggedText(sent[1])
+            dic[sent[0]] = posTaggedSent
+        return dic
+
+    def onlyNNP(self, posTaggedSent):
+        stopWords = get_stop_words('arabic') 
+        add = ['أن', 'أو', 'عوض', 'فليس', 'ليس', 'حين', 'مع', 'رغم', 'معه', 'وله', 'له']
+        stopWords.extend(add)
+        cpt, nouns = 0, []
+        for word in posTaggedSent:
+            if  word[1].split('/')[0] not in stopWords and  word[1].split('/')[1] in ['NN']:
+                cpt +=1
+                nouns.append(word[1].split('/')[0])
+        return cpt, nouns
+
+    def properNounsFeat(self):
+        posTaggedSents, dic = self.getPoSTaggedSents(), {}
+        for sent in posTaggedSents.items():
+            cpt, nouns = self.onlyNNP(sent[1])
+            dic[sent[0]] = cpt
+        return dic
+
 
     # Feature 6: Sentence numerals 
     def sentNumeralsFeat(self):
@@ -224,7 +249,6 @@ class Summary():
         sents = self.getArticleSents()
         sent, centroid = sents[idSent-1], sents[idCentroid-1]
         tfSent, tfCentroid = self.getTF(sent[1]), self.getTF(centroid[1])
-        print(tfCentroid.items())
         common = set(tfCentroid).intersection(tfSent)
         numerateur = 0
         for word in common:
@@ -243,8 +267,30 @@ class Summary():
         return dic
 
 
+    # Build dataset
+    def main(self):
+        dicFeat1 = self.thematicRatioFeat()
+        dicFeat2 = self.sentPosFeat()
+        dicFeat3 = self.sentLenFeat()
+        dicFeat4 = self.sentParaPosFeat()
+        dicFeat5 = self.properNounsFeat()
+        dicFeat6 = self.sentNumeralsFeat()
+        dicFeat7 = self.properNounsFeat()
+        dicFeat8 = self.tf_isfFeat()
+        dicFeat9 = self.centroidSimFeat()
+        print("Number of thematic words:\n",dicFeat1)
+        print("Sentence position:\n",dicFeat2)
+        print("Sentence length:\n",dicFeat3)
+        print("Sentence position in paragraphe:\n",dicFeat4)
+        print("Number of proper nouns:\n",dicFeat5)
+        print("Number of numerals:\n",dicFeat6)
+        print("Number of named entities:\n",dicFeat7)
+        print("TF-ISF:\n",dicFeat8)
+        print("Sentence to centroid sim:\n",dicFeat9)
+
 
 if __name__ == "__main__":
-    article = "article2.txt"
+    article = "article.txt"
     summary = Summary(article, "ar")
-    print(summary.thematicWords())
+    summary.main()
+
