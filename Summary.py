@@ -261,14 +261,14 @@ class Summary():
 
     def centroidSimFeat(self):
         sents, idCentroid, dic = self.getArticleSents(), self.getCentroid(), {}
-        for sent in sents[:1]:
+        for sent in sents:
             dic[sents.index(sent)+1] = self.cosSim(idCentroid, sent[0])
         return dic
 
 
     # Build dataset
     def main(self):
-        dicFeat1 = self.thematicRatioFeat()
+        # dicFeat1 = self.thematicRatioFeat()
         # dicFeat2 = self.sentPosFeat()
         # dicFeat3 = self.sentLenFeat()
         # dicFeat4 = self.sentParaPosFeat()
@@ -276,8 +276,8 @@ class Summary():
         # dicFeat6 = self.sentNumeralsFeat()
         # dicFeat7 = self.properNounsFeat()
         # dicFeat8 = self.tf_isfFeat()
-        # dicFeat9 = self.centroidSimFeat()
-        print("Number of thematic words:\n",dicFeat1)
+        dicFeat9 = self.centroidSimFeat()
+        # print("Number of thematic words:\n",dicFeat1)
         # print("Sentence position:\n",dicFeat2)
         # print("Sentence length:\n",dicFeat3)
         # print("Sentence position in paragraphe:\n",dicFeat4)
@@ -285,7 +285,7 @@ class Summary():
         # print("Number of numerals:\n",dicFeat6)
         # print("Number of named entities:\n",dicFeat7)
         # print("TF-ISF:\n",dicFeat8)
-        # print("Sentence to centroid sim:\n",dicFeat9)
+        print("Sentence to centroid sim:\n",dicFeat9)
 
 
 if __name__ == "__main__":
