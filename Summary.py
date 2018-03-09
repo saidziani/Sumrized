@@ -107,15 +107,14 @@ class Summary():
     # Feature 1: Thematic Ratio
     def thematicRatioFeat(self):
         thematicWords = self.thematicWords()
-        paragraphs = self.getPrepArticle()
+        sents = self.getArticleSents()
         dic = {}
-        for (index ,pg) in paragraphs.items():
+        for st in sents:
             sents = {}
-            for (pos, sent) in pg.items():
-                words = self.getSentTokens(sent)
-                ratio = self.sentThemRatio(thematicWords, words)
-                sents[pos] = ratio
-            dic[index] = sents
+            pos, sent = st[0], st[1]
+            words = self.getSentTokens(sent)
+            ratio = self.sentThemRatio(thematicWords, words)
+            dic[pos] = ratio
         return dic
 
     # Feature 2: Sentence position 
@@ -270,23 +269,23 @@ class Summary():
     # Build dataset
     def main(self):
         dicFeat1 = self.thematicRatioFeat()
-        dicFeat2 = self.sentPosFeat()
-        dicFeat3 = self.sentLenFeat()
-        dicFeat4 = self.sentParaPosFeat()
-        dicFeat5 = self.properNounsFeat()
-        dicFeat6 = self.sentNumeralsFeat()
-        dicFeat7 = self.properNounsFeat()
-        dicFeat8 = self.tf_isfFeat()
-        dicFeat9 = self.centroidSimFeat()
+        # dicFeat2 = self.sentPosFeat()
+        # dicFeat3 = self.sentLenFeat()
+        # dicFeat4 = self.sentParaPosFeat()
+        # dicFeat5 = self.properNounsFeat()
+        # dicFeat6 = self.sentNumeralsFeat()
+        # dicFeat7 = self.properNounsFeat()
+        # dicFeat8 = self.tf_isfFeat()
+        # dicFeat9 = self.centroidSimFeat()
         print("Number of thematic words:\n",dicFeat1)
-        print("Sentence position:\n",dicFeat2)
-        print("Sentence length:\n",dicFeat3)
-        print("Sentence position in paragraphe:\n",dicFeat4)
-        print("Number of proper nouns:\n",dicFeat5)
-        print("Number of numerals:\n",dicFeat6)
-        print("Number of named entities:\n",dicFeat7)
-        print("TF-ISF:\n",dicFeat8)
-        print("Sentence to centroid sim:\n",dicFeat9)
+        # print("Sentence position:\n",dicFeat2)
+        # print("Sentence length:\n",dicFeat3)
+        # print("Sentence position in paragraphe:\n",dicFeat4)
+        # print("Number of proper nouns:\n",dicFeat5)
+        # print("Number of numerals:\n",dicFeat6)
+        # print("Number of named entities:\n",dicFeat7)
+        # print("TF-ISF:\n",dicFeat8)
+        # print("Sentence to centroid sim:\n",dicFeat9)
 
 
 if __name__ == "__main__":
