@@ -268,24 +268,21 @@ class Summary():
 
     # Build dataset
     def main(self):
-        # dicFeat1 = self.thematicRatioFeat()
-        # dicFeat2 = self.sentPosFeat()
-        # dicFeat3 = self.sentLenFeat()
-        # dicFeat4 = self.sentParaPosFeat()
-        # dicFeat5 = self.properNounsFeat()
-        # dicFeat6 = self.sentNumeralsFeat()
-        # dicFeat7 = self.properNounsFeat()
-        # dicFeat8 = self.tf_isfFeat()
+        dicFeat1 = self.thematicRatioFeat()
+        dicFeat2 = self.sentPosFeat()
+        dicFeat3 = self.sentLenFeat()
+        dicFeat4 = self.sentParaPosFeat()
+        dicFeat5 = self.properNounsFeat()
+        dicFeat6 = self.sentNumeralsFeat()
+        dicFeat7 = self.properNounsFeat()
+        dicFeat8 = self.tf_isfFeat()
         dicFeat9 = self.centroidSimFeat()
-        # print("Number of thematic words:\n",dicFeat1)
-        # print("Sentence position:\n",dicFeat2)
-        # print("Sentence length:\n",dicFeat3)
-        # print("Sentence position in paragraphe:\n",dicFeat4)
-        # print("Number of proper nouns:\n",dicFeat5)
-        # print("Number of numerals:\n",dicFeat6)
-        # print("Number of named entities:\n",dicFeat7)
-        # print("TF-ISF:\n",dicFeat8)
-        print("Sentence to centroid sim:\n",dicFeat9)
+        dic = {}
+        for (f1, f2, f3, f4, f5, f6, f7, f8, f9) in zip(dicFeat1.items(), dicFeat2.items(), dicFeat3.items(), dicFeat4.items(), dicFeat5.items(), dicFeat6.items(), dicFeat7.items(), dicFeat8.items(), dicFeat9.items()):
+            l = [f1[1], f2[1], f3[1], f4[1], f5[1], f6[1], f7[1], f8[1], f9[1]]
+            dic[f1[0]] = l
+        print(dic)
+        return dic
 
 
 if __name__ == "__main__":
