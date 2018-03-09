@@ -265,17 +265,17 @@ class Summary():
             dic[sents.index(sent)+1] = self.cosSim(idCentroid, sent[0])
         return dic
 
-    def load2csv(self, csv_path):
+    def load2csv(self):
         import pandas as pd
         data = self.createDataset("columns")
-        features_title = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        # features_title = ['thematicRatioFeat', 'sentPosFeat', 'sentLenFeat', 'sentParaPosFeat', 'properNounsFeat', 'sentNumeralsFeat', 'properNounsFeat', 'tf_isfFeat', 'centroidSimFeat']
+        # features_title = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        features_title = ['thematicRatioFeat', 'sentPosFeat', 'sentLenFeat', 'sentParaPosFeat', 'properNounsFeat', 'sentNumeralsFeat', 'properNounsFeat', 'tf_isfFeat', 'centroidSimFeat']
         dataset = {}
         for (pos, features) in data.items():
             dataset[pos] = features
-        print(dataset)
         dataframe = pd.DataFrame(dataset, columns = features_title)
-        dataframe.to_csv(csv_path, index=False)
+        csv_name = ''.join(self.article.split('.')[:-1])+ ".csv"
+        dataframe.to_csv(csv_name, index=False)
 
 
     # Build dataset
@@ -303,14 +303,15 @@ class Summary():
             # Feat2 = [val1, val2, ..., valN]
             #...
             # FeatN = [val1, val2, ..., valN]
+            ft = ['pos', 'thematicRatioFeat', 'sentPosFeat', 'sentLenFeat', 'sentParaPosFeat', 'properNounsFeat', 'sentNumeralsFeat', 'properNounsFeat', 'tf_isfFeat', 'centroidSimFeat']
             feat1 = []; feat2 = []; feat3 = []; feat4 = []; feat5 = []; feat6 = []; feat7 = []; feat8 = []; feat9 = []; 
             for (f1, f2, f3, f4, f5, f6, f7, f8, f9) in zip(dicFeat1.items(), dicFeat2.items(), dicFeat3.items(), dicFeat4.items(), dicFeat5.items(), dicFeat6.items(), dicFeat7.items(), dicFeat8.items(), dicFeat9.items()):
                 feat1.append(f1[1]); feat2.append(f2[1]); feat3.append(f3[1]); feat4.append(f4[1]); feat5.append(f5[1]); feat6.append(f6[1]); feat7.append(f7[1]); feat8.append(f8[1]); feat9.append(f9[1])
-            dic[1] = feat1; dic[2] = feat2; dic[3] = feat3; dic[4] = feat4; dic[5] = feat5; dic[6] = feat6; dic[7] = feat7; dic[8] = feat8; dic[9] = feat9
+            dic[ft[1]] = feat1; dic[ft[2]] = feat2; dic[ft[3]] = feat3; dic[ft[4]] = feat4; dic[ft[5]] = feat5; dic[ft[6]] = feat6; dic[ft[7]] = feat7; dic[ft[8]] = feat8; dic[ft[9]] = feat9
         return dic
 
     def main(self):
-        self.load2csv('train.csv')
+        self.load2csv()
 
 
 if __name__ == "__main__":
