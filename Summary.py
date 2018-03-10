@@ -296,8 +296,7 @@ class Summary():
             #...
             # pos_sentenceN = [feat1, feat2, ..., featN]
             for (f1, f2, f3, f4, f5, f6, f7, f8, f9) in zip(dicFeat1.items(), dicFeat2.items(), dicFeat3.items(), dicFeat4.items(), dicFeat5.items(), dicFeat6.items(), dicFeat7.items(), dicFeat8.items(), dicFeat9.items()):
-                l = [f1[1], f2[1], f3[1], f4[1], f5[1], f6[1], f7[1], f8[1], f9[1]]
-                dic[f1[0]] = l
+                dic[f1[0]] = [f1[1], f2[1], f3[1], f4[1], f5[1], f6[1], f7[1], f8[1], f9[1]] 
         else:
             # Feat1 = [val1, val2, ..., valN]
             # Feat2 = [val1, val2, ..., valN]
