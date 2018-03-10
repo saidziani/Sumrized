@@ -20,7 +20,7 @@ import os
 
 import pandas as pd
 import theano.sandbox.cuda
-import theano.gpuarray
+# import theano.gpuarray
 
 from theano import config
 config.warn.sum_div_dimshuffle_bug = False
