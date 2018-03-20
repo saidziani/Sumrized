@@ -3,6 +3,10 @@
 import nltk, math
 from string import punctuation
 from stop_words import get_stop_words
+import numpy as np
+from theano.scalar import float64
+from sklearn.feature_extraction import DictVectorizer
+
 
 punctuation += '،؟'
 
@@ -32,15 +36,17 @@ class Summary():
     def getSentTokens(self, sent):
         if self.lang == "ar":
             stopWords = get_stop_words('arabic') 
-            add = ['أن', 'أو', 'عوض', 'فليس', 'ليس', 'حين', 'مع']
+            add = ['ﻊﻣ' ,'ﻦﻴﺣ' ,'ﺲﻴﻟ' ,'ﺲﻴﻠﻓ' ,'ﺽﻮﻋ' ,'ﻭﺃ' ,'ﻥﺃ']
             stopWords.extend(add)
-            tokens = nltk.word_tokenize(sent)
-            cleanedTokens = []
-            for token in tokens:
-                if token not in stopWords:
-                    word = ''.join(c for c in token if c not in punctuation)
-                    if word != '':
-                        cleanedTokens.append(self.wordToStemme(word))
+        else:
+            stopWords = get_stop_words('english') 
+        tokens = nltk.word_tokenize(sent)
+        cleanedTokens = []
+        for token in tokens:
+            if token not in stopWords:
+                word = ''.join(c for c in token if c not in punctuation)
+                if word != '':
+                    cleanedTokens.append(self.wordToStemme(word))
         return cleanedTokens
 
     ## Word normalization (stemming)
@@ -48,18 +54,24 @@ class Summary():
         if self.lang == "ar":
             from nltk.stem.isri import ISRIStemmer
             st = ISRIStemmer()
-            stemme = st.stem(word)
-        return stemme
+        else:
+            from nltk import SnowballStemmer
+            st = SnowballStemmer('english')
+        return st.stem(word) 
+
 
     ## PoS Tagging
     def getPoSTaggedText(self, text):
         from nltk.tag import StanfordPOSTagger
         if self.lang == "ar":
-            jar = 'stanford-pos-tagger/stanford-postagger-3.8.0.jar'
             model = 'stanford-pos-tagger/arabic.tagger'
-            pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8' )
-            tokenizedText = nltk.word_tokenize(text.lower())
-            taggedText = pos_tagger.tag(tokenizedText)
+        else:
+            model = 'stanford-pos-tagger/english.tagger'
+        jar = 'stanford-pos-tagger/stanford-postagger-3.8.0.jar'
+        pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8' )
+        tokenizedText = nltk.word_tokenize(text.lower())
+        taggedText = pos_tagger.tag(tokenizedText)
+
         return taggedText
 
 
@@ -78,12 +90,15 @@ class Summary():
         return dic
 
     ## return article sentences
-    def getArticleSents(self):
+    def getArticleSents(self, param=False):
         text = self.getText()
         sents = self.getParagraghSent(text)
         sentences = []
         for sent in sents:
-            sentences.append([sents.index(sent)+1, sent])
+            if param == True:
+                sentences.append(sent)
+            else:
+                sentences.append([sents.index(sent)+1, sent])
         return sentences
 
 
@@ -163,14 +178,22 @@ class Summary():
         return dic
 
     def onlyNNP(self, posTaggedSent):
-        stopWords = get_stop_words('arabic') 
-        add = ['أن', 'أو', 'عوض', 'فليس', 'ليس', 'حين', 'مع', 'رغم', 'معه', 'وله', 'له']
-        stopWords.extend(add)
+        if self.lang == "ar":
+            stopWords = get_stop_words('arabic') 
+            add = ['ﻪﻟ' ,'ﻪﻟﻭ' ,'ﻪﻌﻣ' ,'ﻢﻏﺭ' ,'ﻊﻣ' ,'ﻦﻴﺣ' ,'ﺲﻴﻟ' ,'ﺲﻴﻠﻓ' ,'ﺽﻮﻋ' ,'ﻭﺃ' ,'ﻥﺃ']
+            stopWords.extend(add)
+        else:
+            stopWords = get_stop_words('english') 
         cpt, nouns = 0, []
         for word in posTaggedSent:
-            if  word[1].split('/')[0] not in stopWords and  word[1].split('/')[1] in ['NN']:
-                cpt +=1
-                nouns.append(word[1].split('/')[0])
+            if self.lang == "ar":
+                if  word[1].split('/')[0] not in stopWords and word[1].split('/')[1] in ['NN']:
+                    cpt +=1
+                    nouns.append(word[1].split('/')[0])
+            else:
+                if  word[0] not in stopWords and word[1] in ['NN']:
+                    cpt +=1
+                    nouns.append(word[0])
         return cpt, nouns
 
     def properNounsFeat(self):
@@ -286,35 +309,74 @@ class Summary():
         dicFeat4 = self.sentParaPosFeat()
         dicFeat5 = self.properNounsFeat()
         dicFeat6 = self.sentNumeralsFeat()
-        dicFeat7 = self.properNounsFeat()
+        dicFeat7 = self.properNounsFeat() #TODO named entities
         dicFeat8 = self.tf_isfFeat()
         dicFeat9 = self.centroidSimFeat()
-        dic = {}
+        ft = ['pos', 'Feature1', 'Feature2', 'Feature3', 'Feature4', 'Feature5', 'Feature6', 'Feature7', 'Feature8', 'Feature9']
+
         if method == "lines":
+            dic, sentence = [], {}
             # pos_sentence1 = [feat1, feat2, ..., featN]
             # pos_sentence2 = [feat1, feat2, ..., featN]
             #...
             # pos_sentenceN = [feat1, feat2, ..., featN]
             for (f1, f2, f3, f4, f5, f6, f7, f8, f9) in zip(dicFeat1.items(), dicFeat2.items(), dicFeat3.items(), dicFeat4.items(), dicFeat5.items(), dicFeat6.items(), dicFeat7.items(), dicFeat8.items(), dicFeat9.items()):
-                dic[f1[0]] = [f1[1], f2[1], f3[1], f4[1], f5[1], f6[1], f7[1], f8[1], f9[1]] 
+                sentence = {}
+                sentence[ft[1]] = f1[1]; 
+                sentence[ft[2]] = f2[1]; 
+                sentence[ft[3]] = f3[1]; 
+                sentence[ft[4]] = f4[1]; 
+                sentence[ft[5]] = f5[1]; 
+                sentence[ft[6]] = f6[1]; 
+                sentence[ft[7]] = f7[1]; 
+                sentence[ft[8]] = f8[1]; 
+                sentence[ft[9]] = f9[1];
+                dic.append(sentence)
+
         else:
+            dic = {}
             # Feat1 = [val1, val2, ..., valN]
             # Feat2 = [val1, val2, ..., valN]
             #...
             # FeatN = [val1, val2, ..., valN]
-            ft = ['pos', 'thematicRatioFeat', 'sentPosFeat', 'sentLenFeat', 'sentParaPosFeat', 'properNounsFeat', 'sentNumeralsFeat', 'properNounsFeat', 'tf_isfFeat', 'centroidSimFeat']
+            # ft = ['pos', 'thematicRatioFeat', 'sentPosFeat', 'sentLenFeat', 'sentParaPosFeat', 'properNounsFeat', 'sentNumeralsFeat', 'properNounsFeat', 'tf_isfFeat', 'centroidSimFeat']
             feat1 = []; feat2 = []; feat3 = []; feat4 = []; feat5 = []; feat6 = []; feat7 = []; feat8 = []; feat9 = []; 
             for (f1, f2, f3, f4, f5, f6, f7, f8, f9) in zip(dicFeat1.items(), dicFeat2.items(), dicFeat3.items(), dicFeat4.items(), dicFeat5.items(), dicFeat6.items(), dicFeat7.items(), dicFeat8.items(), dicFeat9.items()):
                 feat1.append(f1[1]); feat2.append(f2[1]); feat3.append(f3[1]); feat4.append(f4[1]); feat5.append(f5[1]); feat6.append(f6[1]); feat7.append(f7[1]); feat8.append(f8[1]); feat9.append(f9[1])
             dic[ft[1]] = feat1; dic[ft[2]] = feat2; dic[ft[3]] = feat3; dic[ft[4]] = feat4; dic[ft[5]] = feat5; dic[ft[6]] = feat6; dic[ft[7]] = feat7; dic[ft[8]] = feat8; dic[ft[9]] = feat9
         return dic
 
+
+    def sents2numpy(self):
+        data = self.createDataset('lines')
+        vectorizer = DictVectorizer(sparse=False)
+        data = vectorizer.fit_transform(data)
+        data_path = self.article+"_dat" 
+        np.save(data_path, data)
+        np.save(self.article+"_sents", self.getArticleSents(True))
+        return
+
+
+    def loadFromNumpy(self, type=['data', 'sents']):
+        if type == 'data':
+            data_path = self.article+"_dat.npy" 
+            data = np.load(data_path)
+            data = np.array(data, dtype=float64)
+            return data
+        else:
+            sents_path = self.article+"_sents.npy" 
+            sents = np.load(sents_path)
+            return sents
+
+
     def main(self):
-        self.load2csv()
+        self.sents2numpy()
+        # print(self.loadFromNumpy('sents'))
 
 
 if __name__ == "__main__":
-    article = "article.txt"
-    summary = Summary(article, "ar")
+    article = "en/english.txt"
+    summary = Summary(article, "en")
     summary.main()
+
 
