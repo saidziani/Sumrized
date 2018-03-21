@@ -6,6 +6,8 @@ from stop_words import get_stop_words
 import numpy as np
 from theano.scalar import float64
 from sklearn.feature_extraction import DictVectorizer
+from nltk.tag import pos_tag
+from nltk.tag import StanfordPOSTagger
 
 
 punctuation += '،؟'
@@ -62,15 +64,14 @@ class Summary():
 
     ## PoS Tagging
     def getPoSTaggedText(self, text):
-        from nltk.tag import StanfordPOSTagger
+        tokenizedText = nltk.word_tokenize(text.lower())
         if self.lang == "ar":
             model = 'utils/stanford-pos-tagger/arabic.tagger'
+            jar = 'utils/stanford-pos-tagger/stanford-postagger-3.8.0.jar'
+            pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8' )
+            taggedText = pos_tagger.tag(tokenizedText)
         else:
-            model = 'utils/stanford-pos-tagger/english.tagger'
-        jar = 'utils/stanford-pos-tagger/stanford-postagger-3.8.0.jar'
-        pos_tagger = StanfordPOSTagger(model, jar, encoding='utf8' )
-        tokenizedText = nltk.word_tokenize(text.lower())
-        taggedText = pos_tagger.tag(tokenizedText)
+            taggedText = pos_tag(tokenizedText)
         return taggedText
 
 
@@ -220,10 +221,7 @@ class Summary():
 
     # TF−ISF = log( all words TF ∗ ISF ) / Total words
     # Feature 8: Term Frequency-Inverse Sentence Frequency (TF ISF)
-    def getTF(self, sent):
-        words = self.getSentTokens(sent)
-        freqDist = nltk.FreqDist(words)
-        return freqDist
+
 
     def getISF(self, word, idSent):
         sents, isf = self.getArticleSents(), 0
@@ -243,12 +241,34 @@ class Summary():
             # TF_ISF.append([word, TF[word], self.getISF(word, idSent), idSent])
         return ISF
 
+
+    ##################################################
+    def getTF(self, sent):
+        words = self.getSentTokens(sent)
+        freqDist = nltk.FreqDist(words)
+        return freqDist
+
+
+    def getTFIDF(self, sents):
+        sents = [sent[1] for sent in sents]
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        vectorizer = TfidfVectorizer(min_df=1)
+        vectorizer.fit_transform(sents)
+        idf = vectorizer.idf_
+        return dict(zip(vectorizer.get_feature_names(), idf))
+
+
     def tf_isfFeat(self):
         sents, dic = self.getArticleSents(), {}
-        for sent in sents: #TODO
-            TFXISF = self.getTFISF(sent)
-            if TFXISF != 0 :
-                tfisf = round(math.log(TFXISF) / len(sent), 4)
+        tf_idf = self.getTFIDF(sents)
+        for sent in sents: 
+            TF, ISF = self.getTF(sent[1]), 0
+            words = self.getSentTokens(sent[1])
+            for word in words:
+                if word in tf_idf.keys():
+                    ISF += tf_idf[word] * TF[word]
+            if ISF != 0:
+                tfisf = round(math.log(ISF) / len(sent), 4)
             else:
                 tfisf = 0
             dic[sents.index(sent)+1] = tfisf
