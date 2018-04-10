@@ -1,3 +1,2 @@
-tmp/
-RestrictedBoltzmanMachine/__pycache__/
+__pycache__/
 data/
