@@ -1,16 +1,21 @@
 #!/usr/bin/python3
 
-import nltk, math
+import nltk, math, os
 from string import punctuation
 from stop_words import get_stop_words
 import numpy as np
-from theano.scalar import float64
+# from theano.scalar import float64
 from sklearn.feature_extraction import DictVectorizer
 from nltk.tag import pos_tag
 from nltk.tag import StanfordPOSTagger
 
-
 punctuation += '،؟'
+
+root = '/media/said/DevStuff/PFE/Sumrized/'
+tools = root+'Tools/'
+farasa = tools+'farasa'
+farasaSegmenter = farasa + '/segmenter'
+
 
 class Summary():
     def __init__(self, article=False, lang="en"):
@@ -37,9 +42,7 @@ class Summary():
     ## Split sent to tokens
     def getSentTokens(self, sent):
         if self.lang == "ar":
-            stopWords = get_stop_words('arabic') 
-            add = ['ﻊﻣ' ,'ﻦﻴﺣ' ,'ﺲﻴﻟ' ,'ﺲﻴﻠﻓ' ,'ﺽﻮﻋ' ,'ﻭﺃ' ,'ﻥﺃ']
-            stopWords.extend(add)
+            stopWords = open(os.path.join(tools, "arabic-stop-words/list.txt")).read().splitlines()
         else:
             stopWords = get_stop_words('english') 
         tokens = nltk.word_tokenize(sent)
@@ -180,9 +183,7 @@ class Summary():
 
     def onlyNNP(self, posTaggedSent):
         if self.lang == "ar":
-            stopWords = get_stop_words('arabic') 
-            add = ['ﻪﻟ' ,'ﻪﻟﻭ' ,'ﻪﻌﻣ' ,'ﻢﻏﺭ' ,'ﻊﻣ' ,'ﻦﻴﺣ' ,'ﺲﻴﻟ' ,'ﺲﻴﻠﻓ' ,'ﺽﻮﻋ' ,'ﻭﺃ' ,'ﻥﺃ']
-            stopWords.extend(add)
+            stopWords = open(os.path.join(tools, "arabic-stop-words/list.txt")).read().splitlines()
         else:
             stopWords = get_stop_words('english') 
         cpt, nouns = 0, []
@@ -395,3 +396,11 @@ class Summary():
         self.sents2numpy()
         print('Data pre-processing finished.')
         # print(self.loadFromNumpy('sents'))
+
+
+if __name__ == '__main__':
+    summary = Summary()
+    articlePath = '/media/said/DevStuff/PFE/Data/CategCorporaAr/data/new/test.txt'
+    content = summary.getText(articlePath)
+    print(content)
+    sents = summary.
