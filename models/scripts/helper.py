@@ -6,6 +6,7 @@ punctuation += '،؛؟'
 import nltk
 import numpy as np
 from scipy.spatial.distance import cosine
+from nltk.corpus import stopwords
 
 
 root = '/media/said/DevStuff/PFE/Sumrized/'
@@ -14,11 +15,13 @@ tools = root+'Tools/'
 farasa = tools+'farasa'
 farasaSegmenter = farasa + '/segmenter'
 
-stopWords = open(os.path.join(tools, "arabic-stop-words/list.txt")).read().splitlines()
 
 class Helper():
-    def __init__(self, article = False):
+    def __init__(self, article=False, lang=['en', 'ar']):
         self.article = article
+        self.lang = lang
+        self.stopWords = set(stopwords.words('english')) if lang=='en' else open(os.path.join(tools, "arabic-stop-words/list.txt")).read().splitlines() 
+
 
     ##~~Pickle helpers~~#
     def getPickleContent(self, pklFile):
@@ -60,7 +63,7 @@ class Helper():
     def getCleanArticle(self, content):
         content = ''.join(c for c in content if c not in punctuation)  
         words = content.split()     
-        cleandWords = [w for w in words if w not in stopWords]
+        cleandWords = [w for w in words if w not in self.stopWords]
         return ' '.join(cleandWords)
 
 

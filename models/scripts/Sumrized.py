@@ -5,15 +5,15 @@ import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 import gensim.models.keyedvectors as word2vec
 
-help = Helper()
-
-w2vAr_path = tools+'wiki.ar/wiki.ar.vec' #arabe
-#w2vAr_path = tools+'wiki.en.vec' #englais
-
 
 class Sumrized():
 
-    def __init__(self):
+    def __init__(self, lang=['en', 'ar']):
+        self.lang = lang
+        
+        w2vAr_path = tools+'wiki.en/wiki.en.vec' if lang=='en' else tools+'wiki.ar/wiki.ar.vec' 
+        self.help = Helper(lang=lang)
+
         self.word2vec = word2vec.KeyedVectors.load_word2vec_format(w2vAr_path, binary=True,
                                                                    unicode_errors='ignore')
         self.index2word_set = set(self.word2vec.wv.index2word)
@@ -95,8 +95,8 @@ class Sumrized():
 
 
     def summarize(self, text, limit):
-        raw_sentences = help.getArticleSentences(text)
-        clean_sentences = help.getCleanSentences(raw_sentences)
+        raw_sentences = self.help.getArticleSentences(text)
+        clean_sentences = self.help.getCleanSentences(raw_sentences)
         centroid_words = self.get_topic_idf(clean_sentences)
         self.word_vectors_cache(clean_sentences)
         centroid_vector = self.compose_vectors(centroid_words)
@@ -105,7 +105,7 @@ class Sumrized():
         for i in range(len(clean_sentences)):
             words = clean_sentences[i].split()
             sentence_vector = self.compose_vectors(words)
-            score = help.similarity(sentence_vector, centroid_vector)
+            score = self.help.similarity(sentence_vector, centroid_vector)
             sentences_scores.append((i, raw_sentences[i], score, sentence_vector))
 
         sentence_scores_sort = sorted(sentences_scores, key=lambda el: el[2], reverse=True)
@@ -123,7 +123,7 @@ class Sumrized():
                 break
             include = True
             for ps in sentences_summary:
-                sim = help.similarity(s[3], ps[3])
+                sim = self.help.similarity(s[3], ps[3])
                 if sim > self.sim_threshold:
                     include = False
             if include:
@@ -138,11 +138,13 @@ class Sumrized():
 
 
 if __name__ == '__main__':
-    sumrized = Sumrized()
-    articlePath = '../../tests/4.txt'
+    lang = 'en'
+    sumrized = Sumrized(lang)
+    help = Helper(lang=lang)
 
+    articlePath = '../../tests/en/1.txt'
     content = help.getArticleContent(articlePath)
-
     limit = help.getLimit(30, content)
+
     summary = sumrized.summarize(content, limit)
     print(summary)
