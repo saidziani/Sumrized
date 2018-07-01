@@ -96,6 +96,5 @@ class Helper():
             score = ((1 - cosine(v1, v2)) + 1) / 2
         return score
 
-    def getLimit(self, limit, content):
-        nbSentences = len(self.getArticleSentences(content))
+    def getLimit(self, limit, nbSentences):
         return ( limit * nbSentences ) / 100

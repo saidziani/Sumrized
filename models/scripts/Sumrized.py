@@ -8,14 +8,16 @@ import gensim.models.keyedvectors as word2vec
 
 class Sumrized():
 
-    def __init__(self, lang=['en', 'ar']):
+    def __init__(self, lang=['en', 'ar'], Word2Vec=""):
         self.lang = lang
         
-        w2vAr_path = tools+'wiki.en/wiki.en.vec' if lang=='en' else tools+'wiki.ar/wiki.ar.vec' 
         self.help = Helper(lang=lang)
 
-        self.word2vec = word2vec.KeyedVectors.load_word2vec_format(w2vAr_path, binary=True,
-                                                                   unicode_errors='ignore')
+        # self.word2vec = word2vec.KeyedVectors.load_word2vec_format(w2vAr_path, binary=True,
+        #                                                            unicode_errors='ignore')
+
+        self.word2vec = Word2Vec
+
         self.index2word_set = set(self.word2vec.wv.index2word)
         self.word_vectors = dict()
         self.topic_threshold = 0.3
@@ -138,13 +140,12 @@ class Sumrized():
 
 
 if __name__ == '__main__':
-    lang = 'en'
+    lang = 'ar'
     sumrized = Sumrized(lang)
     help = Helper(lang=lang)
 
-    articlePath = '../../tests/en/1.txt'
+    articlePath = '../../tests/ar/majer.txt'
     content = help.getArticleContent(articlePath)
-    limit = help.getLimit(30, content)
-
+    limit = help.getLimit(30, len(content))
     summary = sumrized.summarize(content, limit)
     print(summary)
